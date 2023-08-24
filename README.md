@@ -15,6 +15,10 @@ This code-base was born from the Poisson Surface Reconstruction code. It has evo
 <LI> with both point-wise and integrated constraints.
 </UL>
 <hr>
+
+<hr>
+This forked version of the orignal repository aims to rearrange the program so that it can be better used integrated within a codebase.
+</hr>
 <a name="LINKS"><b>LINKS</b></a><br>
 <ul>
 <b>Papers:</b>
