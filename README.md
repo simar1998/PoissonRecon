@@ -1,8 +1,9 @@
-<center><h2>Adaptive Multigrid Solvers (Version 14.02)</h2></center>
+<center><h2>Adaptive Multigrid Solvers (Version 15.00)</h2></center>
 <center>
 <a href="#LINKS">links</a>
 <a href="#COMPILATION">compilation</a>
 <a href="#EXECUTABLES">executables</a>
+<a href="#LIBRARY">library</a>
 <a href="#USAGE">usage</a>
 <a href="#CHANGES">changes</a>
 </center>
@@ -26,7 +27,7 @@ This forked version of the orignal repository aims to rearrange the program so t
 <b>Papers:</b>
 <a href="https://www.cs.jhu.edu/~misha/MyPapers/SGP06.pdf">[Kazhdan, Bolitho, and Hoppe, 2006]</a>,
 <a href="https://www.agarwala.org/efficient_gdc/">[Agarwala, 2007]</A>
-<a href="https://mesh.brown.edu/ssd/paper.html">[Calakli and Taubin, 2011]</a>,
+<a href="http://mesh.brown.edu/ssd/">[Calakli and Taubin, 2011]</a>,
 <A HREF="https://www.cs.cmu.edu/~kmcrane/Projects/HeatMethod/">[Crane, Weischedel, and Wardetzky, 2013]</a>,
 <a href="https://www.cs.jhu.edu/~misha/MyPapers/ToG13.pdf">[Kazhdan and Hoppe, 2013]</a>,
 <a href="https://www.cs.jhu.edu/~misha/MyPapers/CGF18.pdf">[Kazhdan and Hoppe, 2018]</a>,
@@ -34,10 +35,11 @@ This forked version of the orignal repository aims to rearrange the program so t
 <a href="https://www.cs.jhu.edu/~misha/MyPapers/CGF23.pdf">[Kazhdan and Hoppe, 2023]</a>
 <br>
 <b>Executables: </b>
-<a href="https://www.cs.jhu.edu/~misha/Code/PoissonRecon/Version14.02/AdaptiveSolvers.x64.zip">Win64</a><br>
+<a href="https://www.cs.jhu.edu/~misha/Code/PoissonRecon/Version15.00/AdaptiveSolvers.x64.zip">Win64</a><br>
 <b>Source Code:</b>
-<a href="https://www.cs.jhu.edu/~misha/Code/PoissonRecon/Version14.02/AdaptiveSolvers.zip">ZIP</a> <a href="https://github.com/mkazhdan/PoissonRecon">GitHub</a><br>
+<a href="https://www.cs.jhu.edu/~misha/Code/PoissonRecon/Version15.00/AdaptiveSolvers.zip">ZIP</a> <a href="https://github.com/mkazhdan/PoissonRecon">GitHub</a><br>
 <b>Older Versions:</b>
+<a href="https://www.cs.jhu.edu/~misha/Code/PoissonRecon/Version14.02/">V14.02</a>,
 <a href="https://www.cs.jhu.edu/~misha/Code/PoissonRecon/Version14.01/">V14.01</a>,
 <a href="https://www.cs.jhu.edu/~misha/Code/PoissonRecon/Version14.00/">V14.00</a>,
 <a href="https://www.cs.jhu.edu/~misha/Code/PoissonRecon/Version13.99/">V13.99</a>,
@@ -436,7 +438,7 @@ The default value for this parameter is equal to the numer of (virtual) processo
 <DETAILS>
 <SUMMARY>
 <font size="+1"><b>SSDRecon</b></font>:
-Reconstructs a surface mesh from a set of oriented 3D points by solving for a Smooth Signed Distance function (solving a 3D bi-Laplacian system with positional value and gradient constraints) <a href="https://mesh.brown.edu/ssd/paper.html">[Calakli and Taubin, 2011]</a>
+Reconstructs a surface mesh from a set of oriented 3D points by solving for a Smooth Signed Distance function (solving a 3D bi-Laplacian system with positional value and gradient constraints) <a href="http://mesh.brown.edu/ssd/">[Calakli and Taubin, 2011]</a>
 </SUMMARY>
 <dt><b>--in</b> &lt;<i>input points</i>&gt;
 </dt><dd> This string is the name of the file from which the point set will be read.<br>
@@ -925,6 +927,58 @@ individual components of the visualizer.
 </ul>
 
 <hr>
+<a name="LIBRARY"><b>HEADER-ONLY LIBRARY</b></a><br>
+<UL>
+<DL>
+<DETAILS>
+<SUMMARY>
+<font size="+1"><b>Reconstruction.example.cpp</b></font>
+</SUMMARY>
+In addition to exeuctables, the reconstruction code can be interfaced into through the functionality implemented in <CODE>Reconstructors.h</CODE>.
+Using the functionality requires requires defining one input stream and two output streams. In the descriptions below, the template parameter <CODE>Real</CODE> is the floating point type used to represent data (typically <code>float</code>) and <CODE>Dim</CODE> is the integer dimension of the space (fixed at <CODE>Dim</CODE>=3). Also, the namespace <CODE>Reconstructor</CODE> is omitted for brevity.
+<UL>
+<LI><B>Input sample stream</B>: This class derives from the <CODE>InputSampleStream&lt; Real , Dim &gt;</CODE> class.
+The base class has two pure virtual methods that need to be over-ridden:
+<UL>
+<LI><CODE>void reset( void )</CODE>:<BR>
+This method resets the stream to the start (necessary because the reconstruction code performs two passes over the input samples).
+<LI><CODE>bool base_read( Point&lt; Real , Dim &gt; &#38;p , Point&lt; Real , Dim &gt; &#38;n )</CODE>:<BR>
+This method tries to read the next pair of positions/normals from the stream, returning <code>true</code> if the read was successful and <code>false</code> if the read failed (i.e. the end of the stream was reached). The class <code>Point&lt; Real , Dim &gt;</code> represents a point in <code>Dim</code>-dimensional space, can be accessed like an array (i.e. overloads the bracked operator) and supports algebraic manipulation like addition and scalar multiplication.
+</UL>
+<LI><B>Output vertex stream</B>: This class derives from the <CODE>OutputVertexStream&lt; Real , Dim &gt;</CODE> class.
+The base class has one pure virtual method that needs to be over-ridden:
+<UL>
+<LI><CODE>void base_write( Point&lt; Real , Dim &gt; p , Point&lt; Real , Dim &gt; g , Real w )</CODE>:<BR>
+This method writes the information for the next vertx into the stream. The data includes the position of the vertex, <CODE>p</CODE>, as well as the gradient, <code>g</code>, and density weight, <code>w</code> if the extraction code is asked to compute those.
+</UL>
+<LI><B>Output polygon stream</B>: This class derives from the <CODE>OutputPolygonStream</CODE> class.
+The base class has one pure virtual method that needs to be over-ridden:
+<UL>
+<LI><CODE>void base_write( const std::vector&lt; node_index_type &gt; &#38;polygon )</CODE>:<BR>
+This method writes the information for the next polygon into the stream, with the polygon represented as a <code>std::vector</code> of integral indices. (The type <code>node_index_type</code> is an <code>unsigned int</code> if the <CODE>BIG_DATA</CODE> macro is not defined an <code>unsigned long long</code> if it is.)
+</UL>
+</UL>
+With the streams defined and an FEM degree and boundary type encapsulated in the integer parameter <CODE>FEMSig</CODE> (see line 342 for an example), the reconstruction is performed by calling two functions:
+<UL>
+<LI><CODE>Poisson::Solve&lt; Real , Dim , FEMSig &gt;( InputSampleStream&lt; Real , Dim &gt; &#38;sStream , SolutionParameters&lt; Real &gt; sParams )</CODE>:<BR>
+This function takes in an input sample stream (<code>sStream</code>) and a description of the reconstruction parameters (<code>sParams</code>) desribing the depth, number of samples per node, etc. and returns a pointer to an object of type <CODE>ReconstructionInfo&lt; Real , Dim , FEMSig &gt;</CODE> which stores the octree and coefficients describing the implicit function, as long as (possibly) the sampling density information.
+<LI><CODE>ExtractMesh&lt; Real , Dim , FEMSig &gt;( ReconstructionInfo&lt; Real , Dim , FEMSig &gt; &#38;rInfo , OutputVertexStream&lt; Real , Dim &gt; &#38;vStream , &#38;pStream , MeshExtractionParameters meParams )</CODE>:<BR>
+This function takes in a reference to the recontruction infromation (<code>rInfo</code>), references to the vertex and polygon streams (<code>vStream</code> and <code>pStream</code>) and parameters for mesh extraction (<code>meParams</code>) and computes the extracted triangle/polygon mesh, writing its vertices and faces into the corresponding output streams as they are generated.
+</UL>
+<B>Code walk-through</B>:<br>
+These steps can be found in the <cpp>Reconstruction.example.cpp</cpp> code.
+<UL>
+<LI>An input sample stream generating a specified number of random points on the surface of the sphere is defined in lines 78-115 and constructed in line 299.
+<LI>An output vertex stream that pushes just the position information to an <code>std::vector</code> of <code>Real</code>s is defined in lines 182-192 and constructed in line 311.
+<LI>An output polygon stream that pushes the polygon to an <code>std::vector</code> of <code>std::vector&lt; int &gt;</code>s is defined in lines 164-179 and constructed in line 310.
+<LI>The reconstructor is called on line 303.
+<LI>The mesh extraction is performed on line 314.
+</UL>
+Note that a similar approach can be used to perform the <A HREF="http://mesh.brown.edu/ssd/">Smoothed Signed Distance</A> reconstruction (line 302). The approach also supports reconstruction of meshes with auxiliary information like color (lines 263-292), with the only constraint that the auxiliary data type supports the computation affine combinations (e.g. the <CODE>RGBColor</CODE> type defined in lines 60-75).
+</DL>
+</UL>
+
+<hr>
 <a name="USAGE"><b>USAGE EXAMPLES (WITH SAMPLE DATA)</b></a><br>
 
 <ul>
@@ -1203,7 +1257,7 @@ Similarly, to reduce compilation times, support for specific degrees can be remo
 <a href="https://www.cs.jhu.edu/~misha/Code/PoissonRecon/Version9.0/">Version 9.0</a>:
 <ol>
 <li> Added support for free boundary conditions.
-</li><li> Extended the solver to support more general linear systems. This makes it possible to use the same framework to implement the <a href="https://mesh.brown.edu/ssd/">Smoothed Signed Distance Reconstruction</a> of Calakli and Taubin (2011).
+</li><li> Extended the solver to support more general linear systems. This makes it possible to use the same framework to implement the <a href="http://mesh.brown.edu/ssd/">Smoothed Signed Distance Reconstruction</a> of Calakli and Taubin (2011).
 </li><li> Modified the implementation of density estimation and input representation. This tends to define a slightly larger system. On its own, this results in slightly increased running-time/footprint for full-res reconstructions, but provides a substantially faster implementation when the output complexity is smaller than the input.
 </li></ol>
 
@@ -1358,6 +1412,12 @@ Similarly, to reduce compilation times, support for specific degrees can be remo
 <ol>
 <LI> Fixed overflow bug when there are more than 2^32 nodes in the tree.
 </ol>
+
+<a href="https://www.cs.jhu.edu/~misha/Code/PoissonRecon/Version14.02/">Version 15.00</a>:
+<OL>
+<LI> Added support for header-only interface.
+<LI> Added example using the header-only interface for reconstructing surfaces from points randomly sampled from a sphere.
+</OL>
 
 </DETAILS>
 
